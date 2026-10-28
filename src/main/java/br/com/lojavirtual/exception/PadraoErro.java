@@ -1,4 +1,4 @@
-package br.com.lojavirtual.exceprion;
+package br.com.lojavirtual.exception;
 
 import java.time.LocalDateTime;
 
