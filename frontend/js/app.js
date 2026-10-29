@@ -3,7 +3,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const brl = n => Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const go = h => { if (location.hash === h) render(); else location.hash = h; };
 const STATUS = ['PENDENTE', 'PAGO', 'ENVIADO', 'ENTREGUE', 'CANCELADO'];
-let PC = {}, AT = 'produtos', EDIT = null;
+let PC = {}, AT = 'produtos', EDIT = null, G = null, Q = '';
 
 function toast(t, err) {
   const e = $('#toast'); e.textContent = t; e.className = 'show' + (err ? ' err' : '');
@@ -21,16 +21,18 @@ const Cart = {
 };
 
 function nav() {
-  const u = Auth.user(), n = Cart.get().reduce((s, i) => s + i.q, 0);
-  $('#nav').innerHTML = '<a href="#/">Produtos</a><a href="#/carrinho">Carrinho (' + n + ')</a>' +
-    (u ? '<a href="#/pedidos">Meus pedidos</a>' + (Auth.isAdmin() ? '<a href="#/admin">Admin</a>' : '') +
-      '<span class="muted">' + esc(u.nome || u.sub) + '</span><a href="#" data-a="out">Sair</a>'
-      : '<a href="#/login">Entrar</a><a href="#/cadastro">Cadastrar</a>');
+  const u = Auth.user(), n = Cart.get().reduce((s, i) => s + i.q, 0), c = location.hash.slice(2).split('/')[0];
+  const L = (h, ks, t) => '<a href="' + h + '"' + (ks.includes(c) ? ' class="active" aria-current="page"' : '') + '>' + t + '</a>';
+  $('#nav').innerHTML = L('#/', ['', 'produto'], 'Produtos') + L('#/carrinho', ['carrinho'], 'Carrinho') +
+    (u ? L('#/pedidos', ['pedidos'], 'Meus pedidos') + (Auth.isAdmin() ? L('#/admin', ['admin'], 'Admin') : '') : '');
+  $('#cn').textContent = n; $('#cc').classList.toggle('active', c === 'carrinho');
+  $('#acc').innerHTML = u ? '<span>Olá, <b>' + esc(u.nome || u.sub) + '</b></span><a href="#" data-a="out">Sair</a>'
+    : '<span>Olá. Acesse sua conta</span><span><a href="#/login"' + (c === 'login' ? ' class="active"' : '') + '>Entre</a> ou <a href="#/cadastro"' + (c === 'cadastro' ? ' class="active"' : '') + '>Cadastre-se</a></span>';
 }
 
 async function render() {
   const [a, b] = location.hash.slice(2).split('/');
-  nav(); app.innerHTML = '<p class="muted">Carregando…</p>';
+  G = null; nav(); app.innerHTML = '<p class="muted">Carregando…</p>';
   const V = { '': home, produto: detail, carrinho: cartV, pedidos: ordersV, login: loginV, cadastro: regV, admin: adminV }[a || ''];
   if (!V) { app.innerHTML = '<p>Página não encontrada.</p>'; return; }
   try { await V(b); } catch (e) { app.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
@@ -42,15 +44,15 @@ async function loadProds() {
 
 async function home() {
   const ps = (await loadProds()).filter(p => p.ativo !== false);
-  app.innerHTML = '<input id="q" class="search" placeholder="Pesquisar por nome ou descrição…"><div id="grid" class="grid"></div>';
-  const g = () => {
-    const q = $('#q').value.trim().toLowerCase();
-    const l = ps.filter(p => (p.nome + ' ' + (p.descricao || '')).toLowerCase().includes(q));
-    $('#grid').innerHTML = l.map(p => '<div class="card"><h3>' + esc(p.nome) + '</h3><p class="muted">' + esc(p.descricao) + '</p><b>' + brl(p.preco) + '</b><small>' +
-      (p.estoque > 0 ? p.estoque + ' em estoque' : 'Indisponível') + '</small><div class="row"><a class="btn sec" href="#/produto/' + p.id + '">Detalhes</a><button class="btn" data-a="add" data-id="' + p.id + '"' +
+  app.innerHTML = '<section class="hero"><div><h1>Ofertas em Tech e Games</h1><p>Hardware, periféricos e muito mais com o melhor preço.</p></div><a class="btn" href="#/carrinho">Ver carrinho</a></section><h2 class="sec" id="ht"></h2><div id="grid" class="grid"></div>';
+  $('#hq').value = Q;
+  G = () => {
+    const q = Q.toLowerCase(), l = ps.filter(p => (p.nome + ' ' + (p.descricao || '')).toLowerCase().includes(q));
+    $('#ht').textContent = q ? 'Resultados para "' + Q + '" (' + l.length + ')' : 'Produtos em destaque';
+    $('#grid').innerHTML = l.map(p => '<div class="card"><div class="img">📦' + (p.estoque <= 0 ? '<span class="badge off">Indisponível</span>' : p.estoque <= 5 ? '<span class="badge">Últimas unidades</span>' : '') + '</div><h3>' + esc(p.nome) + '</h3><p class="muted">' + esc(p.descricao) + '</p><b class="price">' + brl(p.preco) + '</b><small>ou 10x de ' + brl(p.preco / 10) + ' sem juros</small><div class="row"><a class="btn sec" href="#/produto/' + p.id + '">Detalhes</a><button class="btn" data-a="add" data-id="' + p.id + '"' +
       (p.estoque > 0 ? '' : ' disabled') + '>Adicionar</button></div></div>').join('') || '<p class="muted">Nenhum produto encontrado.</p>';
   };
-  $('#q').oninput = g; g();
+  G();
 }
 
 async function detail(id) {
@@ -163,6 +165,8 @@ const F = {
   }
 };
 
+$('#sf').onsubmit = e => { e.preventDefault(); Q = $('#hq').value.trim(); go('#/'); };
+$('#hq').oninput = e => { Q = e.target.value.trim(); if (G) G(); };
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-a]');
   if (t && H[t.dataset.a]) { e.preventDefault(); H[t.dataset.a](t.dataset.id, t); }

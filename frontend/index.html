@@ -7,8 +7,17 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header><a href="#/" class="logo">🛒 Loja Virtual</a><nav id="nav"></nav></header>
+<header>
+  <div class="top">
+    <a href="#/" class="logo">🛒 Loja<b>Virtual</b></a>
+    <form id="sf" role="search"><input id="hq" type="search" placeholder="Busque por produtos…" aria-label="Buscar produtos"><button>Buscar</button></form>
+    <div id="acc"></div>
+    <a href="#/carrinho" id="cc" class="cartlink" aria-label="Carrinho">🛒 <span id="cn">0</span></a>
+  </div>
+  <nav id="nav"></nav>
+</header>
 <main id="app"></main>
+<footer>Loja Virtual · Projeto acadêmico de Desenvolvimento de Aplicações</footer>
 <div id="toast"></div>
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
