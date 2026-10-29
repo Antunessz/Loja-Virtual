@@ -28,4 +28,18 @@ public class TokenService {
     private Instant gerarDataExpiracao() {
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
+
+    // NOVO MÉTODO: Lê o token e retorna o e-mail se for válido
+    public String validarToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            return JWT.require(algorithm)
+                    .withIssuer("loja-virtual")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+        } catch (Exception exception) {
+            return ""; // Retorna vazio se o token for inválido, expirado ou fraudado
+        }
+    }
 }
