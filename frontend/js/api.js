@@ -97,4 +97,75 @@ function route(m, p, b) {
     if (!o) E('Pedido não encontrado.'); o.status = b.status; sv(); return 'ok';
   }
   E('Rota não encontrada.');
+
+  // URL base da sua API definida no config.js
+  const API_BASE_URL = 'http://localhost:8080/api';
+
+  async function registrarUsuario(event) {
+    event.preventDefault(); // Impede o recarregamento da página
+
+    // 1. Captura os valores dos campos do formulário HTML
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+
+    // 2. Monta o objeto com os dados para enviar ao backend
+    const dadosCadastro = {
+      nome: nome,
+      email: email,
+      senha: senha
+    };
+
+    try {
+      // 3. Executa a função fetch para enviar os dados via POST
+      const resposta = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dadosCadastro) // Transforma o objeto em formato JSON
+      });
+
+      // 4. Analisa a resposta do servidor
+      if (resposta.status === 201) {
+        alert('Usuário cadastrado com sucesso!');
+        // Redireciona para a tela de login
+        window.location.href = 'login.html';
+      } else {
+        // Caso ocorra um erro (ex: e-mail duplicado ou validação falha)
+        const erroMensagem = await resposta.text();
+        alert(`Erro no cadastro: ${erroMensagem}`);
+      }
+    } catch (erro) {
+      console.error('Erro na comunicação com a API:', erro);
+      alert('Falha ao conectar com o servidor. Tente novamente mais tarde.');
+    }
+  }
+}
+async function registrarUsuario(event) {
+  event.preventDefault();
+
+  const dadosCadastro = {
+    nome: document.getElementById('nome').value,
+    email: document.getElementById('email').value,
+    senha: document.getElementById('senha').value
+  };
+
+  try {
+    const resposta = await fetch('http://localhost:8080/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dadosCadastro)
+    });
+
+    if (resposta.status === 201) {
+      alert('Cadastro realizado com sucesso!');
+      // Futuramente, chamaremos aqui a função de carregar a tela de login
+    } else {
+      const erro = await resposta.text();
+      alert(`Erro: ${erro}`);
+    }
+  } catch (erro) {
+    alert('Falha na comunicação com o servidor.');
+  }
 }

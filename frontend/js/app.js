@@ -175,3 +175,27 @@ document.addEventListener('change', e => { const t = e.target; if (t.dataset && 
 document.addEventListener('submit', e => { const f = e.target; if (f.dataset && f.dataset.f && F[f.dataset.f]) { e.preventDefault(); F[f.dataset.f](f); } });
 window.addEventListener('hashchange', render);
 window.addEventListener('DOMContentLoaded', render);
+
+function carregarTelaCadastro() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+        <div class="login-area">
+            <h1 class="login-title">Cadastre-se</h1>
+            <form class="login-box" onsubmit="registrarUsuario(event)">
+                <div class="input-group">
+                    <label>Nome</label>
+                    <input type="text" id="nome" required>
+                </div>
+                <div class="input-group">
+                    <label>E-mail</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="input-group">
+                    <label>Senha</label>
+                    <input type="password" id="senha" required>
+                </div>
+                <button type="submit" class="btn-logar">Cadastrar</button>
+            </form>
+        </div>
+    `;
+}

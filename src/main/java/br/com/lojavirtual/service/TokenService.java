@@ -12,6 +12,8 @@ import java.time.ZoneOffset;
 @Service
 public class TokenService {
 
+
+
     // Assinatura secreta da sua aplicação (em um projeto real, fica escondida em variáveis de ambiente)
     private String secret = "minha-chave-secreta-loja-virtual";
 
@@ -42,4 +44,7 @@ public class TokenService {
             return ""; // Retorna vazio se o token for inválido, expirado ou fraudado
         }
     }
+
+
+
 }
