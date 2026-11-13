@@ -6,6 +6,7 @@ import br.com.lojavirtual.entity.Produto;
 import br.com.lojavirtual.repository.CategoriaRepository;
 import br.com.lojavirtual.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class ProdutoService {
@@ -31,5 +32,8 @@ public class ProdutoService {
         produto.setCategoria(categoria);
 
         return produtoRepository.save(produto);
+    }
+    public List<Produto> listar() {
+        return produtoRepository.findAll();
     }
 }
