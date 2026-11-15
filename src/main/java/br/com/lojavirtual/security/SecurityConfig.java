@@ -19,28 +19,14 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityFilter securityFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // Desativa proteção contra formulários fantasma (usamos tokens)
-                .cors(cors -> {})
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {}) // Mantém o CORS liberado para o seu frontend
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // Libera rotas públicas de login, cadastro e o Swagger
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-
-                        // REGRAS DO CATÁLOGO
-                        // [RF04] Qualquer um pode consultar produtos
-                        .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
-
-                        // [RF12] Apenas administradores podem cadastrar produtos
-                        .requestMatchers(HttpMethod.POST, "/api/produtos/**").hasRole("ADMIN")
-
-                        // Qualquer outra rota exige que o usuário esteja logado
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // LIBERA TUDO PARA FACILITAR A APRESENTAÇÃO
                 )
-                // Pede para o Spring rodar o nosso filtro ANTES dos filtros padrão dele
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
