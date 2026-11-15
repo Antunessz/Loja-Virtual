@@ -21,8 +21,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody UsuarioLoginDTO dto) {
-        // Token com estrutura JWT correta (Header.Payload.Signature) para o front decodificar sem erro
-        String mockJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IlRlc3RlIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+        String mockJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibm9tZSI6IlRlc3RlIDMiLCJwZXJmaWwiOiJST0xFX0FETUlOIn0.signature";
         return ResponseEntity.ok(mockJwt);
     }
 
