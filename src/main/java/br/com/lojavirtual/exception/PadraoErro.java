@@ -15,4 +15,9 @@ public class PadraoErro {
         this.mensage = mensage;
 
     }
+
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public Integer getStatus() { return status; }
+    public String getError() { return error; }
+    public String getMensage() { return mensage; }
 }

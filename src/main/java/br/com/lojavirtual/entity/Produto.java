@@ -53,4 +53,7 @@ public class Produto {
 
     public Categoria getCategoria() { return categoria; }
     public void setCategoria(Categoria categoria) { this.categoria = categoria; }
+
+    // Usado pelo frontend (campo "ativo" no JSON); no banco continua sendo a coluna status
+    public boolean getAtivo() { return "ATIVO".equals(status); }
 }

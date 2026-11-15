@@ -99,8 +99,9 @@ async function adminV() {
         STATUS.map(s => '<option' + (s === o.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td></tr>').join('') || '<tr><td colspan="5" class="muted">Nenhum pedido.</td></tr>') + '</table></div>';
     return;
   }
-  const ps = await loadProds(), e = PC[EDIT] || {};
+  const ps = await loadProds(), e = PC[EDIT] || {}, cats = await api('GET', '/api/categorias');
   app.innerHTML = '<h2>Gerenciar produtos</h2>' + tabs + '<div class="box wide"><h3>' + (e.id ? 'Editar produto #' + e.id : 'Novo produto') + '</h3><form data-f="prod"><label>Nome<input name="nome" required maxlength="100" value="' + esc(e.nome) + '"></label><label>Descrição<textarea name="descricao" rows="2">' + esc(e.descricao) + '</textarea></label>' +
+    '<label>Categoria<select name="categoriaId">' + cats.map(c => '<option value="' + c.id + '"' + (e.categoria && e.categoria.id === c.id ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('') + '</select></label>' +
     '<label>Preço (R$)<input name="preco" type="number" step="0.01" min="0" required value="' + esc(e.preco) + '"></label><label>Estoque<input name="estoque" type="number" step="1" min="0" required value="' + esc(e.estoque == null ? 0 : e.estoque) + '"></label>' +
     '<label><span><input name="ativo" type="checkbox"' + (e.ativo === false ? '' : ' checked') + '> Produto ativo (visível na loja)</span></label><div class="row"><button class="btn">Salvar</button>' + (e.id ? '<button type="button" class="btn sec" data-a="cancel">Cancelar</button>' : '') + '</div></form></div>' +
     '<div class="scroll"><table><tr><th>Produto</th><th>Preço</th><th>Estoque</th><th>Situação</th><th></th></tr>' +
@@ -131,7 +132,7 @@ const H = {
   cancel() { EDIT = null; render(); },
   async tog(id) {
     const p = PC[id]; if (!p) return;
-    try { await api('PUT', '/api/produtos/' + id, { ...p, ativo: p.ativo === false }); render(); } catch (e) { toast(e.message, 1); }
+    try { await api('PUT', '/api/produtos/' + id, { nome: p.nome, descricao: p.descricao, preco: p.preco, estoque: p.estoque, ativo: p.ativo === false }); render(); } catch (e) { toast(e.message, 1); }
   },
   async st(id, el) {
     try { await api('PUT', '/api/pedidos/' + id + '/status', { status: el.value }); toast('Status atualizado.'); } catch (e) { toast(e.message, 1); render(); }
@@ -156,8 +157,10 @@ const F = {
   },
   async prod(f) {
     const preco = parseFloat(f.preco.value), estoque = parseInt(f.estoque.value, 10);
-    if (!f.nome.value.trim() || !(preco >= 0) || !(estoque >= 0)) { toast('Preencha nome, preço e estoque válidos.', 1); return; }
-    const b = { nome: f.nome.value.trim(), descricao: f.descricao.value.trim(), preco, estoque, ativo: f.ativo.checked };
+    const cid = f.categoriaId ? parseInt(f.categoriaId.value, 10) : 0;
+    if (!f.nome.value.trim() || !(preco > 0) || !(estoque >= 0)) { toast('Preencha nome, preço (maior que zero) e estoque válidos.', 1); return; }
+    if (!cid) { toast('Selecione uma categoria.', 1); return; }
+    const b = { nome: f.nome.value.trim(), descricao: f.descricao.value.trim(), preco, estoque, ativo: f.ativo.checked, categoriaId: cid };
     try {
       if (EDIT) await api('PUT', '/api/produtos/' + EDIT, b); else await api('POST', '/api/produtos', b);
       toast('Produto salvo!'); EDIT = null; render();
@@ -175,27 +178,3 @@ document.addEventListener('change', e => { const t = e.target; if (t.dataset && 
 document.addEventListener('submit', e => { const f = e.target; if (f.dataset && f.dataset.f && F[f.dataset.f]) { e.preventDefault(); F[f.dataset.f](f); } });
 window.addEventListener('hashchange', render);
 window.addEventListener('DOMContentLoaded', render);
-
-function carregarTelaCadastro() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-        <div class="login-area">
-            <h1 class="login-title">Cadastre-se</h1>
-            <form class="login-box" onsubmit="registrarUsuario(event)">
-                <div class="input-group">
-                    <label>Nome</label>
-                    <input type="text" id="nome" required>
-                </div>
-                <div class="input-group">
-                    <label>E-mail</label>
-                    <input type="email" id="email" required>
-                </div>
-                <div class="input-group">
-                    <label>Senha</label>
-                    <input type="password" id="senha" required>
-                </div>
-                <button type="submit" class="btn-logar">Cadastrar</button>
-            </form>
-        </div>
-    `;
-}

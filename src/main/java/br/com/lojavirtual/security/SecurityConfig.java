@@ -1,4 +1,4 @@
-package br.com.lojavirtual.config;
+package br.com.lojavirtual.security;
 
 import br.com.lojavirtual.security.SecurityFilter;
 import org.springframework.context.annotation.Bean;

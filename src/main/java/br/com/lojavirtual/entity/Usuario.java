@@ -48,4 +48,6 @@ public class Usuario {
 
     public LocalDateTime getDataCadastro() { return dataCadastro; }
     public void setDataCadastro(LocalDateTime dataCadastro) { this.dataCadastro = dataCadastro; }
+
+    public boolean isAdmin() { return "ROLE_ADMIN".equals(perfil); }
 }

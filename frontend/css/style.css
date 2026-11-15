@@ -47,3 +47,8 @@ footer{text-align:center;padding:18px;color:var(--mut);font-size:.85rem;border-t
 .btn{line-height:1.2;font-family:inherit;text-align:center;display:inline-block}
 .card .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
 .card .row .btn{width:100%;padding:10px 6px}
+#sf{flex-direction:row;gap:0}
+#sf input{flex:1;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px}
+.row,.tabs{align-items:center}
+td .btn{min-height:34px;padding:6px 12px}

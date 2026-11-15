@@ -1,5 +1,6 @@
 package br.com.lojavirtual.controller;
 
+import br.com.lojavirtual.dto.UsuarioLoginDTO;
 import br.com.lojavirtual.dto.UsuarioRegistroDTO;
 import br.com.lojavirtual.service.AuthService;
 import jakarta.validation.Valid;
@@ -27,6 +28,16 @@ public class AuthController {
         } catch (RuntimeException e) {
             // Captura o erro de e-mail duplicado (RN004) e retorna status 400 (Bad Request)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // Mapeia a rota POST /api/auth/login (RF02) e devolve o token JWT
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@Valid @RequestBody UsuarioLoginDTO dto) {
+        try {
+            return ResponseEntity.ok(authService.autenticarUsuario(dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
 }

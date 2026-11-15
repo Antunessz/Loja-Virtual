@@ -23,6 +23,7 @@ public class TokenService {
                 .withIssuer("loja-virtual") // Quem emitiu
                 .withSubject(usuario.getEmail()) // A quem pertence (e-mail)
                 .withClaim("perfil", usuario.getPerfil()) // Nível de acesso
+                .withClaim("nome", usuario.getNome())
                 .withExpiresAt(gerarDataExpiracao()) // Validade
                 .sign(algorithm);
     }
