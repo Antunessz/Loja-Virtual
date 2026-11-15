@@ -22,10 +22,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {}) // Mantém o CORS liberado para o seu frontend
+                .cors(cors -> {}) // Garante que as anotações @CrossOrigin nos controllers funcionem
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll() // LIBERA TUDO PARA FACILITAR A APRESENTAÇÃO
+                        .anyRequest().permitAll() // Aberto para a apresentação
                 )
                 .build();
     }

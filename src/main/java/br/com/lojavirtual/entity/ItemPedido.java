@@ -26,7 +26,7 @@ public class ItemPedido {
     @Column(nullable = false)
     private BigDecimal subtotal;
 
-    public long getId(){return id;}
+    public Long getId(){return id;}
     public void setId(long id){this.id=id;}
 
     public Long getPedidoId(){return pedidoId;}
@@ -42,6 +42,7 @@ public class ItemPedido {
     public void setSubtotal(BigDecimal subtotal) {this.subtotal = subtotal;}
 
     public BigDecimal getPrecoUnitario() {return precoUnitario;}
+    public void setPrecoUnitario(BigDecimal precoUnitario) { this.precoUnitario = precoUnitario; }
 
 
 }
