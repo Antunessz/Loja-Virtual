@@ -8,14 +8,16 @@ public class UsuarioRegistroDTO {
 
     // Regra [RN001] Cadastro de usuário: Validação de campos obrigatórios
     @NotBlank(message = "O nome é obrigatório")
+    @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres")
     private String nome;
 
     @NotBlank(message = "O e-mail é obrigatório")
     @Email(message = "Formato de e-mail inválido")
+    @Size(max = 100, message = "O e-mail deve ter no máximo 100 caracteres")
     private String email;
 
     @NotBlank(message = "A senha é obrigatória")
-    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
+    @Size(min = 6, max = 72, message = "A senha deve ter entre 6 e 72 caracteres")
     private String senha;
 
     public String getNome() { return nome; }

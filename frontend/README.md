@@ -1,11 +1,9 @@
 # Frontend – Loja Virtual (HTML + CSS + JavaScript puro)
 
-## Como rodar
-Abra `index.html` no navegador (ou Live Server do VS Code).
+Abra `index.html` no navegador (ou Live Server).
 
-- `js/config.js` com `MOCK: true`: funciona só no navegador (dados no localStorage). Admin de teste: **admin@loja.com / admin123**.
-- `MOCK: false`: usa o backend Spring Boot em `API` (padrão `http://localhost:8080`). Suba o backend antes
-  e cadastre um usuário; para virar admin: `UPDATE usuario SET perfil = 'ROLE_ADMIN' WHERE email = 'seu@email.com';`
+- `js/config.js` com `MOCK: false`: usa o backend Spring Boot em `API` (padrão `http://localhost:8080`).
+- `MOCK: true`: funciona só no navegador (localStorage). Admin de teste: **admin@loja.com / admin123**.
 
-Rotas usadas: `POST /api/auth/register`, `POST /api/auth/login`, `GET/POST /api/produtos`, `PUT /api/produtos/{id}`,
-`GET /api/categorias`, `POST /api/pedidos`, `GET /api/pedidos/meus`, `GET /api/pedidos`, `PUT /api/pedidos/{id}/status`.
+Telas: login, cadastro, produtos (busca, filtro por categoria, ordenação), detalhes, carrinho, meus pedidos
+(linha do tempo do status), detalhe do pedido, meu perfil e área admin (produtos com foto e prazo de entrega, estoque e pedidos).

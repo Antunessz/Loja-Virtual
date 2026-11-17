@@ -3,49 +3,47 @@ package br.com.lojavirtual.service;
 import br.com.lojavirtual.entity.Usuario;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class TokenService {
 
+    private static final String ISSUER = "loja-virtual";
 
+    private final Algorithm algorithm;
 
-    // Assinatura secreta da sua aplicação (em um projeto real, fica escondida em variáveis de ambiente)
-    private String secret = "minha-chave-secreta-loja-virtual";
+    // A chave vem do application.properties / variável de ambiente JWT_SECRET (nunca fixa no código)
+    public TokenService(@Value("${app.jwt.secret}") String secret) {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException("app.jwt.secret precisa ter pelo menos 32 caracteres");
+        }
+        this.algorithm = Algorithm.HMAC256(secret);
+    }
 
     public String gerarToken(Usuario usuario) {
-        Algorithm algorithm = Algorithm.HMAC256(secret);
+        Instant agora = Instant.now();
         return JWT.create()
-                .withIssuer("loja-virtual") // Quem emitiu
-                .withSubject(usuario.getEmail()) // A quem pertence (e-mail)
-                .withClaim("perfil", usuario.getPerfil()) // Nível de acesso
+                .withIssuer(ISSUER)
+                .withSubject(usuario.getEmail())
                 .withClaim("nome", usuario.getNome())
-                .withExpiresAt(gerarDataExpiracao()) // Validade
+                .withClaim("perfil", usuario.getPerfil())
+                .withIssuedAt(agora)
+                .withExpiresAt(agora.plus(2, ChronoUnit.HOURS)) // independe do fuso do servidor
                 .sign(algorithm);
     }
 
-    private Instant gerarDataExpiracao() {
-        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
-    }
-
-    // NOVO MÉTODO: Lê o token e retorna o e-mail se for válido
+    // Retorna o e-mail do token válido, ou "" se for inválido, expirado ou adulterado
     public String validarToken(String token) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(secret);
-            return JWT.require(algorithm)
-                    .withIssuer("loja-virtual")
-                    .build()
-                    .verify(token)
-                    .getSubject();
-        } catch (Exception exception) {
-            return ""; // Retorna vazio se o token for inválido, expirado ou fraudado
+            String subject = JWT.require(algorithm).withIssuer(ISSUER).build().verify(token).getSubject();
+            return subject == null ? "" : subject;
+        } catch (JWTVerificationException e) {
+            return "";
         }
     }
-
-
-
 }

@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -19,25 +18,16 @@ public class AuthController {
         this.authService = authService;
     }
 
-    // Mapeia a rota POST /api/auth/register
-    @PostMapping("/register")
-    public ResponseEntity<String> registrar(@Valid @RequestBody UsuarioRegistroDTO dto) {
-        try {
-            authService.registrarUsuario(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Usuário cadastrado com sucesso!");
-        } catch (RuntimeException e) {
-            // Captura o erro de e-mail duplicado (RN004) e retorna status 400 (Bad Request)
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    // Mapeia a rota POST /api/auth/login (RF02) e devolve o token JWT
+    // [RF02] devolve o token JWT somente se e-mail e senha conferirem
     @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody UsuarioLoginDTO dto) {
-        try {
-            return ResponseEntity.ok(authService.autenticarUsuario(dto));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-        }
+        return ResponseEntity.ok(authService.autenticarUsuario(dto));
+    }
+
+    // [RF01]
+    @PostMapping("/register")
+    public ResponseEntity<String> registrar(@Valid @RequestBody UsuarioRegistroDTO dto) {
+        authService.registrarUsuario(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário cadastrado com sucesso!");
     }
 }

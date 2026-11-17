@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -28,34 +28,27 @@ public class SecurityFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var token = this.recuperarToken(request);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        String token = recuperarToken(request);
 
-        if (token != null) {
+        if (token != null && !token.isBlank()) {
             String email = tokenService.validarToken(token);
-
             if (!email.isEmpty()) {
-                Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
-
-                if (usuario != null) {
-                    // Transforma o perfil do banco (ex: "ROLE_CLIENTE" ou "ROLE_ADMIN") em uma autoridade do Spring
-                    var authorities = Collections.singletonList(new SimpleGrantedAuthority(usuario.getPerfil()));
-                    var authentication = new UsernamePasswordAuthenticationToken(usuario, null, authorities);
-
-                    // Salva o usuário logado no contexto da requisição atual
+                usuarioRepository.findByEmail(email).ifPresent(usuario -> {
+                    var authentication = new UsernamePasswordAuthenticationToken(
+                            usuario, null, List.of(new SimpleGrantedAuthority(usuario.getPerfil())));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+                });
             }
         }
-        // Continua o fluxo da requisição
         filterChain.doFilter(request, response);
-
     }
 
+    // Só aceita o formato "Authorization: Bearer <token>"
     private String recuperarToken(HttpServletRequest request) {
-        var authHeader = request.getHeader("Authorization");
-        if (authHeader == null) return null;
-        return authHeader.replace("Bearer ", "");
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) return null;
+        return header.substring(7).trim();
     }
-
 }

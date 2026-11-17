@@ -3,61 +3,58 @@ package br.com.lojavirtual.service;
 import br.com.lojavirtual.dto.UsuarioLoginDTO;
 import br.com.lojavirtual.dto.UsuarioRegistroDTO;
 import br.com.lojavirtual.entity.Usuario;
+import br.com.lojavirtual.exception.RegraNegocioException;
 import br.com.lojavirtual.repository.UsuarioRepository;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
+    // Mensagem única: não revela se o e-mail existe (evita enumeração de usuários)
+    private static final String CREDENCIAIS_INVALIDAS = "E-mail ou senha inválidos";
+
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
-    // Correção: TokenService adicionado aos parâmetros do construtor
     public AuthService(UsuarioRepository repository, PasswordEncoder passwordEncoder, TokenService tokenService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
     }
 
-    public UsuarioRepository getRepository() {
-        return repository;
-    }
-
-    public PasswordEncoder getPasswordEncoder() {
-        return passwordEncoder;
-    }
-
     public Usuario registrarUsuario(UsuarioRegistroDTO dto) {
-        // Regra [RN004]: Verifica e-mail único
-        if (repository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new RuntimeException("E-mail já está em uso!");
+        String email = dto.getEmail().trim().toLowerCase();
+
+        // [RN004] e-mail único
+        if (repository.findByEmail(email).isPresent()) {
+            throw new RegraNegocioException("E-mail já está em uso!");
         }
 
-        Usuario novoUsuario = new Usuario();
-        novoUsuario.setNome(dto.getNome());
-        novoUsuario.setEmail(dto.getEmail());
+        Usuario novo = new Usuario();
+        novo.setNome(dto.getNome().trim());
+        novo.setEmail(email);
+        novo.setSenha(passwordEncoder.encode(dto.getSenha())); // [RN005]
+        novo.setPerfil("ROLE_CLIENTE");
 
-        // Regra [RN005]: Protege a senha
-        novoUsuario.setSenha(passwordEncoder.encode(dto.getSenha()));
-        novoUsuario.setPerfil("ROLE_CLIENTE");
-
-        return repository.save(novoUsuario);
+        try {
+            return repository.save(novo);
+        } catch (DataIntegrityViolationException e) { // dois cadastros simultâneos com o mesmo e-mail
+            throw new RegraNegocioException("E-mail já está em uso!");
+        }
     }
 
-    // NOVO MÉTODO PARA LOGIN [RN002]
+    // [RN002] autenticação
     public String autenticarUsuario(UsuarioLoginDTO dto) {
-        // 1. Busca o usuário no banco
-        Usuario usuario = repository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+        Usuario usuario = repository.findByEmail(dto.getEmail().trim().toLowerCase())
+                .orElseThrow(() -> new RegraNegocioException(CREDENCIAIS_INVALIDAS, HttpStatus.UNAUTHORIZED));
 
-        // 2. Compara a senha digitada com a criptografada no banco
         if (!passwordEncoder.matches(dto.getSenha(), usuario.getSenha())) {
-            throw new RuntimeException("Senha incorreta!");
+            throw new RegraNegocioException(CREDENCIAIS_INVALIDAS, HttpStatus.UNAUTHORIZED);
         }
-
-        // 3. Se tudo estiver certo, fabrica e entrega o crachá (Token)
         return tokenService.gerarToken(usuario);
     }
 }

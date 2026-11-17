@@ -1,14 +1,17 @@
 package br.com.lojavirtual.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 public class ProdutoAtualizacaoDTO {
 
     @NotBlank(message = "O nome do produto é obrigatório")
+    @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres")
     private String nome;
 
     private String descricao;
@@ -24,6 +27,13 @@ public class ProdutoAtualizacaoDTO {
     private Boolean ativo;
 
     private Long categoriaId;
+
+    // Foto (Data URL). No cadastro: opcional. Na edição: ausente = manter, vazio = remover.
+    private String imagem;
+
+    @Min(value = 0, message = "O prazo de entrega não pode ser negativo")
+    @Max(value = 365, message = "O prazo de entrega deve ser de até 365 dias")
+    private Integer prazoEntregaDias;
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
@@ -42,4 +52,10 @@ public class ProdutoAtualizacaoDTO {
 
     public Long getCategoriaId() { return categoriaId; }
     public void setCategoriaId(Long categoriaId) { this.categoriaId = categoriaId; }
+
+    public String getImagem() { return imagem; }
+    public void setImagem(String imagem) { this.imagem = imagem; }
+
+    public Integer getPrazoEntregaDias() { return prazoEntregaDias; }
+    public void setPrazoEntregaDias(Integer prazoEntregaDias) { this.prazoEntregaDias = prazoEntregaDias; }
 }

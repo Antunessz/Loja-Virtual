@@ -27,6 +27,14 @@ public class Produto {
     @Column(length = 50)
     private String status;
 
+    // Foto em Data URL (data:image/jpeg;base64,...). O frontend reduz para no máximo 600 px antes de enviar.
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String imagem;
+
+    // Prazo médio de entrega, em dias úteis
+    @Column(name = "prazo_entrega_dias")
+    private Integer prazoEntregaDias;
+
     // Relacionamento: Muitos Produtos pertencem a Uma Categoria (N:1)
     @ManyToOne
     @JoinColumn(name = "categoria_id")
@@ -54,6 +62,12 @@ public class Produto {
     public Categoria getCategoria() { return categoria; }
     public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 
-    // Usado pelo frontend (campo "ativo" no JSON); no banco continua sendo a coluna status
+    public String getImagem() { return imagem; }
+    public void setImagem(String imagem) { this.imagem = imagem; }
+
+    public Integer getPrazoEntregaDias() { return prazoEntregaDias; }
+    public void setPrazoEntregaDias(Integer prazoEntregaDias) { this.prazoEntregaDias = prazoEntregaDias; }
+
+    // Campo "ativo" no JSON (usado pelo frontend); no banco continua sendo a coluna status
     public boolean getAtivo() { return "ATIVO".equals(status); }
 }

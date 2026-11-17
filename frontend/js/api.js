@@ -30,18 +30,25 @@ async function api(m, p, b) {
 }
 
 /* ---------- Backend simulado (somente quando MOCK = true) ---------- */
+const CATS = [{ id: 1, nome: 'Computadores' }, { id: 2, nome: 'Periféricos' }, { id: 3, nome: 'Monitores' }];
+
+function mkToken(u) {
+  const pl = { sub: u.email, nome: u.nome, perfil: u.perfil, uid: u.id, exp: Math.floor(Date.now() / 1000) + 7200 };
+  return 'x.' + btoa(unescape(encodeURIComponent(JSON.stringify(pl)))).replace(/=/g, '') + '.x';
+}
+
 function db() {
   let d = Store.get('lv_db', null);
   if (!d) {
     d = { seq: 10,
       users: [{ id: 1, nome: 'Administrador', email: 'admin@loja.com', senha: 'admin123', perfil: 'ROLE_ADMIN' }],
       produtos: [
-        { id: 1, nome: 'Notebook Gamer', descricao: 'Notebook 16GB RAM, SSD 512GB', preco: 4500, estoque: 5, ativo: true },
-        { id: 2, nome: 'Mouse sem fio', descricao: 'Mouse óptico 1600 DPI', preco: 89.9, estoque: 30, ativo: true },
-        { id: 3, nome: 'Teclado mecânico', descricao: 'Switch azul, ABNT2', preco: 249.9, estoque: 12, ativo: true },
-        { id: 4, nome: 'Headset USB', descricao: 'Headset com microfone', preco: 199, estoque: 0, ativo: true },
-        { id: 5, nome: 'Monitor 24"', descricao: 'Full HD, 75Hz, HDMI', preco: 899, estoque: 8, ativo: true },
-        { id: 6, nome: 'Webcam Full HD', descricao: 'Webcam 1080p com microfone', preco: 159.9, estoque: 15, ativo: true }],
+        { id: 1, nome: 'Notebook Gamer', descricao: 'Notebook 16GB RAM, SSD 512GB', preco: 4500, estoque: 5, ativo: true, prazoEntregaDias: 7, imagem: null, categoria: CATS[0] },
+        { id: 2, nome: 'Mouse sem fio', descricao: 'Mouse óptico 1600 DPI', preco: 89.9, estoque: 30, ativo: true, prazoEntregaDias: 3, imagem: null, categoria: CATS[1] },
+        { id: 3, nome: 'Teclado mecânico', descricao: 'Switch azul, ABNT2', preco: 249.9, estoque: 12, ativo: true, prazoEntregaDias: 3, imagem: null, categoria: CATS[1] },
+        { id: 4, nome: 'Headset USB', descricao: 'Headset com microfone', preco: 199, estoque: 0, ativo: true, prazoEntregaDias: 3, imagem: null, categoria: CATS[1] },
+        { id: 5, nome: 'Monitor 24"', descricao: 'Full HD, 75Hz, HDMI', preco: 899, estoque: 8, ativo: true, prazoEntregaDias: 5, imagem: null, categoria: CATS[2] },
+        { id: 6, nome: 'Webcam Full HD', descricao: 'Webcam 1080p com microfone', preco: 159.9, estoque: 15, ativo: true, prazoEntregaDias: 3, imagem: null, categoria: CATS[1] }],
       pedidos: [] };
     Store.set('lv_db', d);
   }
@@ -66,15 +73,20 @@ function route(m, p, b) {
     const u = d.users.find(u => u.email === (b.email || '').trim().toLowerCase());
     if (!u) E('Usuário não encontrado!');
     if (u.senha !== b.senha) E('Senha incorreta!');
-    const pl = { sub: u.email, nome: u.nome, perfil: u.perfil, uid: u.id, exp: Math.floor(Date.now() / 1000) + 7200 };
-    return 'x.' + btoa(unescape(encodeURIComponent(JSON.stringify(pl)))).replace(/=/g, '') + '.x';
+    return mkToken(u);
   }
-  if (m === 'GET' && p === '/api/categorias') return [{ id: 1, nome: 'Geral' }];
+  if (m === 'GET' && p === '/api/categorias') return CATS;
   if (m === 'GET' && p === '/api/produtos') return d.produtos.filter(x => x.ativo !== false || (me && me.perfil === 'ROLE_ADMIN'));
-  if (m === 'POST' && p === '/api/produtos') { adm(); d.produtos.push({ id: ++d.seq, ...b }); sv(); return 'ok'; }
+  if (m === 'POST' && p === '/api/produtos') {
+    adm(); d.produtos.push({ id: ++d.seq, ...b, imagem: b.imagem || null, categoria: CATS.find(c => c.id == b.categoriaId) || null }); sv(); return 'ok';
+  }
   if (m === 'PUT' && /^\/api\/produtos\/\d+$/.test(p)) {
     adm(); const x = d.produtos.find(x => x.id == p.split('/')[3]);
-    if (!x) E('Produto não encontrado.'); Object.assign(x, b, { id: x.id }); sv(); return 'ok';
+    if (!x) E('Produto não encontrado.');
+    const { imagem, ...resto } = b; Object.assign(x, resto, { id: x.id });
+    if (imagem !== undefined) x.imagem = imagem || null;
+    if (b.categoriaId) x.categoria = CATS.find(c => c.id == b.categoriaId) || x.categoria;
+    sv(); return 'ok';
   }
   if (m === 'POST' && p === '/api/pedidos') {
     log(); const it = b.itens || []; if (!it.length) E('Carrinho vazio.');
@@ -88,7 +100,10 @@ function route(m, p, b) {
       return { produtoId: x.id, nome: x.nome, preco: x.preco, quantidade: i.quantidade };
     });
     its.forEach(i => { d.produtos.find(x => x.id === i.produtoId).estoque -= i.quantidade; });
-    d.pedidos.push({ id: ++d.seq, uid: me.uid, cliente: me.nome, data: new Date().toISOString(), status: 'PENDENTE', total: tot, itens: its });
+    const mp = Math.max(0, ...its.map(i => d.produtos.find(x => x.id === i.produtoId).prazoEntregaDias || 0));
+    let prev = null;
+    if (mp > 0) { const r = new Date(); let k = 0; while (k < mp) { r.setDate(r.getDate() + 1); if (r.getDay() % 6) k++; } prev = r.toISOString().slice(0, 10); }
+    d.pedidos.push({ id: ++d.seq, uid: me.uid, cliente: me.nome, data: new Date().toISOString(), status: 'PENDENTE', total: Math.round(tot * 100) / 100, previsaoEntrega: prev, itens: its });
     sv(); return 'ok';
   }
   if (m === 'GET' && p === '/api/pedidos/meus') { log(); return d.pedidos.filter(o => o.uid === me.uid).reverse(); }
@@ -96,6 +111,16 @@ function route(m, p, b) {
   if (m === 'PUT' && /^\/api\/pedidos\/\d+\/status$/.test(p)) {
     adm(); const o = d.pedidos.find(o => o.id == p.split('/')[3]);
     if (!o) E('Pedido não encontrado.'); o.status = b.status; sv(); return 'ok';
+  }
+  if (p === '/api/usuarios/me') {
+    log(); const u = d.users.find(u => u.id === me.uid); if (!u) E('Usuário não encontrado.');
+    if (m === 'GET') return { nome: u.nome, email: u.email, token: null };
+    if (m === 'PUT') {
+      if (!(b.nome || '').trim()) E('O nome é obrigatório');
+      u.nome = b.nome.trim();
+      if (b.novaSenha) { if (u.senha !== b.senhaAtual) E('Senha atual incorreta'); if (b.novaSenha.length < 6) E('A nova senha deve ter entre 6 e 72 caracteres'); u.senha = b.novaSenha; }
+      sv(); return { nome: u.nome, email: u.email, token: mkToken(u) };
+    }
   }
   E('Rota não encontrada.');
 }

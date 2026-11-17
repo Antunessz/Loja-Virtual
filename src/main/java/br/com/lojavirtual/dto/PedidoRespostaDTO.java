@@ -1,6 +1,7 @@
 package br.com.lojavirtual.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,7 @@ public class PedidoRespostaDTO {
     private String status;
     private BigDecimal total;
     private String cliente;
+    private LocalDate previsaoEntrega;
     private List<Item> itens = new ArrayList<>();
 
     public Long getId() { return id; }
@@ -29,6 +31,9 @@ public class PedidoRespostaDTO {
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
 
+    public LocalDate getPrevisaoEntrega() { return previsaoEntrega; }
+    public void setPrevisaoEntrega(LocalDate previsaoEntrega) { this.previsaoEntrega = previsaoEntrega; }
+
     public List<Item> getItens() { return itens; }
     public void setItens(List<Item> itens) { this.itens = itens; }
 
@@ -37,6 +42,7 @@ public class PedidoRespostaDTO {
         private String nome;
         private BigDecimal preco;
         private Integer quantidade;
+        private BigDecimal subtotal;
 
         public Long getProdutoId() { return produtoId; }
         public void setProdutoId(Long produtoId) { this.produtoId = produtoId; }
@@ -49,5 +55,8 @@ public class PedidoRespostaDTO {
 
         public Integer getQuantidade() { return quantidade; }
         public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
+
+        public BigDecimal getSubtotal() { return subtotal; }
+        public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
     }
 }
