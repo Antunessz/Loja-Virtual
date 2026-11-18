@@ -10,6 +10,11 @@ import java.util.List;
 @Entity
 @Table(name = "PEDIDO")
 public class Pedido {
+    @Transient
+    private java.util.List<ItemPedido> itens;
+
+    public java.util.List<ItemPedido> getItens() { return itens; }
+    public void setItens(java.util.List<ItemPedido> itens) { this.itens = itens; }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
